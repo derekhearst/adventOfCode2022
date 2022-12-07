@@ -1115,6 +1115,9 @@ function addFiles(obj, path, files) {
 function calcSize(obj) {
 	obj.size = 0
 	for (let prop in obj) {
+		if (prop == "size") {
+			continue
+		}
 		if (typeof obj[prop] == "object") {
 			obj.size += calcSize(obj[prop]).size
 		} else {
@@ -1127,7 +1130,7 @@ function calcSize(obj) {
 // console.log(getFolder({},["yo","arg","fred"]))
 // console.log(addFiles({},["yo","arg","fred"],{a:3000,b:3}))
 
-let commands = input.split("$", 20)
+let commands = input.split("$")
 let root = {}
 let currDir = []
 
@@ -1170,6 +1173,44 @@ for (let result of commands) {
 			break
 	}
 }
-
+function findAllDirWith100000(obj) {
+	let sum = 0
+	if (obj.size <= 100000) {
+		//if folder size is under, then count it
+		sum += obj.size
+	}
+	for (let prop in obj) {
+		// search every folder
+		if (typeof obj[prop] == "object") {
+			sum += findAllDirWith100000(obj[prop]) //dig into folders and return size
+		}
+	}
+	return sum
+}
 calcSize(root)
-console.log(root)
+
+let totalSpace = 70000000
+let spaceNeeded = 30000000
+let spaceToClear = totalSpace - root.size - spaceNeeded
+console.log(-spaceToClear)
+
+let arr = []
+function putFoldersInArr(obj, arr) {
+	arr.push(obj.size)
+	for (let prop in obj) {
+		if (typeof obj[prop] == "object") {
+			putFoldersInArr(obj[prop], arr)
+		}
+	}
+}
+putFoldersInArr(root, arr)
+arr.sort((a, b) => {
+	return b - a
+})
+console.log(arr.filter(a => a >= -spaceToClear))
+// console.log(arr)
+
+// findThingsToDelete(root)
+// console.log(findAllDirWith100000(root))
+
+// console.log(root)
