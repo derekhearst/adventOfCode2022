@@ -1,3 +1,4 @@
+/* eslint-disable semi */
 let input = `$ cd /
 $ ls
 dir fwbjchs
@@ -1207,7 +1208,10 @@ putFoldersInArr(root, arr)
 arr.sort((a, b) => {
 	return b - a
 })
-console.log(arr.filter(a => a >= -spaceToClear))
+
+console.log(arr.filter((a) => a >= -spaceToClear))
+
+// log all elements of
 // console.log(arr)
 
 // findThingsToDelete(root)
