@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 let input = `R 1
 U 1
 D 2
@@ -1999,37 +2000,168 @@ U 17
 D 3
 U 10`
 
+let testInput = `R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20`
+
 let canvasElm = document.getElementById("day9")
 let ctx = canvasElm.getContext("2d")
 let scale = 10
 let offset = scale * 50
 canvasElm.width = scale * 100
 canvasElm.height = scale * 100
-let moves = input.split("\n")
 
-let knots = []
-knots.length = 10
-knots.fill({ x: 0, y: 0 })
-console.log(knots)
-let lastKnotLocations = new Set()
-drawKnots()
-function drawKnots() {
-	ctx.clearRect(0, 0, canvasElm.width, canvasElm.height)
-	for (let knot of knots) {
-		ctx.beginPath()
-		ctx.fillStyle = "red"
-		ctx.fillRect(knot.x * scale + offset, knot.y * scale + offset, scale, scale)
+let commands = testInput.split("\n")
+
+let rootKnot = { x: 0, y: 0 }
+let tailKnotLocations = new Set()
+function fillRoot(knot, count) {
+	if (count) {
+		knot.child = { x: 0, y: 0 }
+		fillRoot(knot.child, count - 1)
 	}
-	knots.forEach((knot, index) => {
-		ctx.beginPath()
-		if (index == 9) {
-			ctx.fillStyle = "green"
-		} else {
-			ctx.fillStyle = "red"
-		}
-		ctx.fillText(index, knot.x * scale + offset, knot.y * scale + offset)
-	})
 }
+
+fillRoot(rootKnot, 1)
+drawKnots(rootKnot, true)
+
+for (let command of commands) {
+	let direction = command[0]
+	let distance = parseInt(command.substring(1))
+
+	for (let i = 0; i < distance; i++) {
+		switch (direction) {
+			case "U":
+				rootKnot.y++
+				break
+			case "D":
+				rootKnot.y--
+
+				break
+			case "L":
+				rootKnot.x++
+
+				break
+			case "R":
+				rootKnot.x--
+				break
+		}
+
+		computeMove(rootKnot)
+
+		ctx.clearRect(0, 0, canvasElm.width, canvasElm.height)
+		drawPast()
+		drawKnots(rootKnot)
+		drawKnotLocationsSize()
+		// wait one second
+		await new Promise(resolve => setTimeout(resolve, 100))
+	}
+}
+
+// console.log(tailKnotLocations.size)
+
+function computeMove(knot) {
+	if (knot.child) {
+		let xDiff = knot.x - knot.child.x
+		let yDiff = knot.y - knot.child.y
+		let distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff)
+
+		computeMove(knot.child)
+	} else {
+		tailKnotLocations.add(knot.x + "," + knot.y)
+	}
+}
+
+function drawPast() {
+	for (let knotLocation of tailKnotLocations) {
+		let [x, y] = knotLocation.split(",").map(x => parseInt(x))
+		ctx.beginPath()
+		ctx.fillStyle = "purple"
+		ctx.fillRect(x * scale + offset, y * scale + offset, scale, scale)
+	}
+}
+
+function drawKnotLocationsSize() {
+	ctx.beginPath()
+	ctx.fillStyle = "white"
+	ctx.font = "30px Arial"
+	ctx.fillText(tailKnotLocations.size, 10, 30)
+}
+
+function drawKnots(root) {
+	ctx.beginPath()
+	if (root.child) {
+		ctx.fillStyle = "red"
+	} else {
+		ctx.fillStyle = "green"
+	}
+
+	ctx.fillRect(root.x * scale + offset, root.y * scale + offset, scale, scale)
+	if (root.child) {
+		drawKnots(root.child)
+	}
+}
+
+// OLD CODE
+// for (let command of commands) {
+// 	let direction = command.substring(0, 1)
+// 	let length = parseInt(command.substring(1))
+
+// 	for (let i = 0; i < length; i++) {
+// 		knots[0].lastLocation.x = knots[0].x
+// 		knots[0].lastLocation.y = knots[0].y
+// 		switch (direction) {
+// 			case "U":
+// 				knots[0].y--
+// 				break
+// 			case "D":
+// 				knots[0].y++
+// 				break
+// 			case "L":
+// 				knots[0].x--
+// 				break
+// 			case "R":
+// 				knots[0].x++
+// 				break
+// 		}
+
+// 		knots.forEach((knot, index) => {
+// 			if (!index) {
+// 				knot.lastLocation.x = knot.x
+// 				knot.lastLocation.y = knot.y
+// 			}
+// 			if(knot.child){}
+// 				let distance = Math.sqrt(Math.pow(knot.x - knot.child.x, 2) + Math.pow(knot.y - knot.child.y, 2))
+// 				if (distance > 1.5) {
+// 					knot.child.x = knot.lastLocation.x
+// 					knot.child.y = knot.lastLocation.y
+// 				}
+// 			}
+// 		})
+// 	}
+// 	// wait one second
+// 	console.log(knots)
+// 	drawKnots()
+// 	await new Promise(resolve => setTimeout(resolve, 1000))
+// }
+
+// function drawKnots() {
+// 	ctx.clearRect(0, 0, canvasElm.width, canvasElm.height)
+// 	knots.forEach((knot, index) => {
+// 		ctx.beginPath()
+// 		if (index == 9) {
+// 			ctx.fillStyle = "green"
+// 		} else {
+// 			ctx.fillStyle = "red"
+// 		}
+// 		ctx.fillRect(knot.x * scale + offset, knot.y * scale + offset, scale, scale)
+// 	})
+// }
 
 // let root = { x: 0, y: 0 }
 // function fillRoot(root, length) {
