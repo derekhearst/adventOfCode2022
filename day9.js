@@ -2016,7 +2016,7 @@ let offset = scale * 50
 canvasElm.width = scale * 100
 canvasElm.height = scale * 100
 
-let commands = testInput.split("\n")
+let commands = input.split("\n")
 
 let rootKnot = { x: 0, y: 0 }
 let tailKnotLocations = new Set()
@@ -2027,7 +2027,7 @@ function fillRoot(knot, count) {
 	}
 }
 
-fillRoot(rootKnot, 1)
+fillRoot(rootKnot, 9)
 drawKnots(rootKnot, true)
 
 for (let command of commands) {
@@ -2056,7 +2056,7 @@ for (let command of commands) {
 
 		ctx.clearRect(0, 0, canvasElm.width, canvasElm.height)
 		drawPast()
-		drawKnots(rootKnot)
+		drawKnots(rootKnot, true)
 		drawKnotLocationsSize()
 		// wait one second
 		await new Promise(resolve => setTimeout(resolve, 100))
@@ -2067,10 +2067,31 @@ for (let command of commands) {
 
 function computeMove(knot) {
 	if (knot.child) {
-		let xDiff = knot.x - knot.child.x
-		let yDiff = knot.y - knot.child.y
-		let distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff)
+		let xDiff = Math.abs(knot.x - knot.child.x)
+		let yDiff = Math.abs(knot.y - knot.child.y)
+		//get distance between two points
+		let distance = Math.sqrt(Math.pow(knot.x - knot.child.x, 2) + Math.pow(knot.y - knot.child.y, 2))
+		if (distance > 1.5) {
+			// console.log(distance)
+			if (xDiff >= yDiff) {
+				if (knot.child.x - knot.x >= 0) {
+					knot.child.x = knot.x + 1
+					knot.child.y = knot.y
+				} else {
+					knot.child.x = knot.x - 1
 
+					knot.child.y = knot.y
+				}
+			} else if (yDiff >= xDiff) {
+				if (knot.child.y - knot.y >= 0) {
+					knot.child.y = knot.y + 1
+					knot.child.x = knot.x
+				} else {
+					knot.child.y = knot.y - 1
+					knot.child.x = knot.x
+				}
+			}
+		}
 		computeMove(knot.child)
 	} else {
 		tailKnotLocations.add(knot.x + "," + knot.y)
@@ -2093,12 +2114,16 @@ function drawKnotLocationsSize() {
 	ctx.fillText(tailKnotLocations.size, 10, 30)
 }
 
-function drawKnots(root) {
+function drawKnots(root, first = false) {
 	ctx.beginPath()
+
 	if (root.child) {
 		ctx.fillStyle = "red"
 	} else {
 		ctx.fillStyle = "green"
+	}
+	if (first) {
+		ctx.fillStyle = "blue"
 	}
 
 	ctx.fillRect(root.x * scale + offset, root.y * scale + offset, scale, scale)
